@@ -1,6 +1,13 @@
 package chip;
 
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 public class Chip {
+	
+	// TODO: What is casting in Java?
 	
 	// Before coding anything, you want to know a little bit about the Chip 8 program
 	// These steps are based on the how the wikipedia page goes down the line
@@ -20,7 +27,11 @@ public class Chip {
 		// TODO: Study JPanel. What is it?
 	// Step 10) Creating multiple threads
 		// First Thread: To Update the Chip
+			// Loading the memory into the chip
+			// Using LoadProgram along with a DataInputStream
 		// Second Thread: To Update the Frame and keep it "steady"
+			// Redrawing w/ Boolean and checks
+			//
 	
 	// Memory:
 	//  4096 (0x1000) memory locations, each of which are 8 byte
@@ -86,6 +97,8 @@ public class Chip {
 	private byte[] keys;
 	
 	private byte[] display;
+	
+	private boolean needRedraw;
 
 	public void init() {
 		
@@ -109,6 +122,8 @@ public class Chip {
 		//  display[1] = 1;
 		//  display[52] = 1;
 		//  display[96] = 1;
+		
+		needRedraw = false;
 	}
 	
 	public void run() {
@@ -117,12 +132,23 @@ public class Chip {
 		//   Since our memory is only 8 byte, we will have to merge two
 		//   memory slots into one
 		char opcode = (char)((memory[pc] << 8) | memory[pc +1]);
-		//  System.out.println(Integer.toHexString(opcode)); This results in 0
+		 System.out.println(Integer.toHexString(opcode));
 		// Step 2) Decode the Opcode
 		
 		// This switch statement is just checking the very first byte, so if it's 8
 		// and it results in 0x8000, then it will execute
 		switch(opcode & 0xF000) {
+		
+		case 0x0000:
+			break;
+		case 0x1000:
+			break;
+		case 0x2000:
+			break;
+		case 0x3000:
+			break;
+		case 0x7000:
+			break;
 		
 		case 0x8000: //contains more data in last nibble
 			// This statement is checking that last statement so the opposite of
@@ -132,7 +158,6 @@ public class Chip {
 			// 8XY0 meaning if the this switch statement equals 0 it will equal this
 			// Sets VX to the value of VY.
 			case 0x0000:
-				default:
 					System.err.println("Unsupported opcode");
 					System.exit(0);
 					break;
@@ -149,6 +174,40 @@ public class Chip {
 	
 	public byte[] getDisplay() {
 		return display;
+	}
+
+	public boolean needsRedraw() {
+		return needRedraw;
+	}
+
+	public void removeDrawFlag() {
+		needRedraw = false;
+	}
+
+	public void loadProgram(String file) {
+		DataInputStream input = null;
+		try {
+			input = new DataInputStream(new FileInputStream(new File(file)));
+			
+			int offset = 0;
+			while(input.available() > 0) {
+				memory[0x200+ offset] = (char)(input.readByte() & 0xFF);
+				// & with the 0xFF allows us to grab just the last two bytes
+				offset++;
+			}
+			
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.exit(0);
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch(IOException e) {
+					// Not Dealing with this error
+				}
+			}
+		}
 	}
 
 }
