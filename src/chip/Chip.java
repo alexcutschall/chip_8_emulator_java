@@ -141,13 +141,32 @@ public class Chip {
 		
 		case 0x0000:
 			break;
-		case 0x1000:
+		case 0x1000: // 1NNN: Jumps to address NNN.
 			break;
-		case 0x2000:
+		case 0x2000: // 2NNN: Calls subroutine at NNN
+			
+			// Since this CALLS the subroutine, we need to use the stack
+			// Executes two codes since we call this subroutine, but we need
+			// to maintain our current position
+			// Store Stack
+			char address = (char)(opcode & 0x0FFF);
+			stack[stackPointer] = pc;
+			stackPointer++;
+			pc = address;
+			
 			break;
-		case 0x3000:
+		case 0x3000: // 3XNN: Skips the next instruction if VX equals NN
 			break;
-		case 0x7000:
+		case 0x6000: // 6XNN: Sets VX to NN
+			//V is the registery, X is the index
+			int index = (opcode & 0x0F00) >> 8; //Getting the second spot from the opcode
+			V[index] = (char)(opcode & 0x00FF);
+			pc += 2;
+			break;
+		case 0x7000: // 7XNN: Adds NN to VX
+			int sevenIndex = (opcode & 0x0F00) >> 8;
+			V[sevenIndex] += (opcode & 0x00FF);
+			pc += 2;
 			break;
 		
 		case 0x8000: //contains more data in last nibble
@@ -164,7 +183,16 @@ public class Chip {
 			}
 			
 			break;
+		case 0xA000: //Sets I to the address NNN
+			char addressPointer = (char) (opcode & 0x0FFF);
+			I = addressPointer;
 			
+			pc +=2; // Why do we have to advance my two bytes?
+			break;
+			
+		case 0xD000: //DXYN: Drawing a sprite at (x, y) with dimensions (8, N)
+			pc += 2;
+			break;
 			default:
 				System.err.println("Unsupported opcode");
 				System.exit(0);
